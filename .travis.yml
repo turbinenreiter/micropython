@@ -2,16 +2,12 @@ language: c
 sudo: false
 env:
   # Target commit for https://github.com/pfalcon/esp-open-sdk/
-  OPENSDK_COMMIT=cd1d336
-  CROSS_ROOT="${HOME}/toolchain-${OPENSDK_COMMIT}"
+  CROSS_ROOT="${HOME}/toolchain-xtensa"
   CROSS_BINDIR="${CROSS_ROOT}/bin"
-  ESPTOOL2_COMMIT=ec0e2c7
-  ESPTOOL2_DIR="${HOME}/esptool2-${ESPTOOL2_COMMIT}"
-  PATH=${PATH}:${CROSS_BINDIR}:${ESPTOOL2_DIR}
+  PATH=${PATH}:${CROSS_BINDIR}
 cache:
   directories:
     - ${CROSS_ROOT}
-    - ${ESPTOOL2_DIR}
 addons:
   apt:
     packages:
@@ -33,6 +29,7 @@ addons:
     - python-serial
     - sed
     - git
+    - help2man
 
 before_install:
   # Install a toolchain using esp-open-sdk (parts we need for this are the GNU toolchain and libhal)
@@ -43,16 +40,9 @@ before_install:
   - unset CC # Travis sets this due to "language: c", but it confuses autotools configure when cross-building
   - ${HAS_TC} || git clone --recursive https://github.com/pfalcon/esp-open-sdk.git
   - ${HAS_TC} || cd esp-open-sdk
-  - ${HAS_TC} || git reset --hard ${OPENSDK_COMMIT}
-  - ${HAS_TC} || git submodule update
   - ${HAS_TC} || sed -i "s/2.69/2.68/" lx106-hal/configure.ac # this is a nasty hack as Ubuntu Precise only has autoconf 2.68 not 2.69...
   - ${HAS_TC} || sed -r -i 's%TOOLCHAIN ?=.*%TOOLCHAIN=${CROSS_ROOT}%' Makefile
-  - ${HAS_TC} || make STANDALONE=n
-  - export HAS_ET2="test -f ${ESPTOOL2_DIR}/esptool2"
-  - ${HAS_ET2} || git clone https://github.com/raburton/esptool2 ${ESPTOOL2_DIR}
-  - ${HAS_ET2} || cd ${ESPTOOL2_DIR}
-  - ${HAS_ET2} || git reset --hard ${ESPTOOL2_COMMIT}
-  - ${HAS_ET2} || make
+  - ${HAS_TC} || make
 
 script:
   - cd ${TRAVIS_BUILD_DIR}
