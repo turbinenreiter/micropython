@@ -65,8 +65,8 @@ void NETDUINO_PLUS_2_board_early_init(void);
 #define MICROPY_HW_LED3             (pin_A10)   // Same as Led(1)
 #define MICROPY_HW_LED4             (pin_C13)   // Same as Led(2)
 #define MICROPY_HW_LED_OTYPE        (GPIO_MODE_OUTPUT_PP)
-#define MICROPY_HW_LED_ON(pin)      (pin->gpio->BSRRL = pin->pin_mask)
-#define MICROPY_HW_LED_OFF(pin)     (pin->gpio->BSRRH = pin->pin_mask)
+#define MICROPY_HW_LED_ON(pin)      (pin->gpio->BSRR = pin->pin_mask)
+#define MICROPY_HW_LED_OFF(pin)     (pin->gpio->BSRR = pin->pin_mask << 16)
 
 // USB VBUS detect pin
 #define MICROPY_HW_USB_VBUS_DETECT_PIN (pin_A9)
