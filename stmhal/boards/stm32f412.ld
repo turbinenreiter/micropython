@@ -1,5 +1,5 @@
 /*
-    GNU linker script for STM32F411
+    GNU linker script for STM32F412
 */
 
 /* Specify the memory areas */

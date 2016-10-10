@@ -1,5 +1,5 @@
-#define MICROPY_HW_BOARD_NAME       "NUCLEO-F411RE"
-#define MICROPY_HW_MCU_NAME         "STM32F411xE"
+#define MICROPY_HW_BOARD_NAME       "NUCLEO-F412ZG"
+#define MICROPY_HW_MCU_NAME         "STM32F411"
 
 #define MICROPY_HW_HAS_SWITCH       (1)
 #define MICROPY_HW_HAS_FLASH        (1)
