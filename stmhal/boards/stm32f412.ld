@@ -9,7 +9,7 @@ MEMORY
     FLASH_ISR (rx)  : ORIGIN = 0x08000000, LENGTH = 0x004000 /* sector 0, 16 KiB */
                                                              /* sectors 1,2,3 are 16K, 4 is 64K (for filesystem) */
     FLASH_TEXT (rx) : ORIGIN = 0x08020000, LENGTH = 0x080000 /* sectors 5,6,7,8 4*128KiB = 512 KiB */
-    RAM (xrw)       : ORIGIN = 0x20000000, LENGTH = 0x020000 /* 128 KiB */
+    RAM (xrw)       : ORIGIN = 0x20000000, LENGTH = 0x040000 /* 256 KiB */
 }
  
 /* produce a link error if there is not this amount of RAM for these sections */
