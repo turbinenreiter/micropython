@@ -145,7 +145,7 @@ typedef enum
   SDIO_IRQn                   = 49,     /*!< SDIO global Interrupt                                             */
   TIM5_IRQn                   = 50,     /*!< TIM5 global Interrupt                                             */
   SPI3_IRQn                   = 51,     /*!< SPI3 global Interrupt                                             */
-  TIM6_IRQn                   = 54,     /*!< TIM6 global interrupt                                             */
+  TIM6_DAC_IRQn                   = 54,     /*!< TIM6 global interrupt                                             */
   TIM7_IRQn                   = 55,     /*!< TIM7 global interrupt                                             */
   DMA2_Stream0_IRQn           = 56,     /*!< DMA2 Stream 0 global Interrupt                                    */
   DMA2_Stream1_IRQn           = 57,     /*!< DMA2 Stream 1 global Interrupt                                    */
