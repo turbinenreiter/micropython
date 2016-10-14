@@ -70,7 +70,7 @@
 
 #if !defined (STM32F405xx) && !defined (STM32F415xx) && !defined (STM32F407xx) && !defined (STM32F417xx) && \
     !defined (STM32F427xx) && !defined (STM32F437xx) && !defined (STM32F429xx) && !defined (STM32F439xx) && \
-    !defined (STM32F401xC) && !defined (STM32F401xE) && !defined (STM32F411xE)
+    !defined (STM32F401xC) && !defined (STM32F401xE) && !defined (STM32F411xE) && !defined (STM32F412Zx)
   /* #define STM32F405xx */   /*!< STM32F405RG, STM32F405VG and STM32F405ZG Devices */
   /* #define STM32F415xx */   /*!< STM32F415RG, STM32F415VG and STM32F415ZG Devices */
   /* #define STM32F407xx */   /*!< STM32F407VG, STM32F407VE, STM32F407ZG, STM32F407ZE, STM32F407IG  and STM32F407IE Devices */
@@ -84,6 +84,7 @@
   /* #define STM32F401xC */   /*!< STM32F401CB, STM32F401CC, STM32F401RB, STM32F401RC, STM32F401VB and STM32F401VC Devices */
   /* #define STM32F401xE */   /*!< STM32F401CD, STM32F401RD, STM32F401VD, STM32F401CE, STM32F401RE and STM32F401VE Devices */
   /* #define STM32F411xE */   /*!< STM32F411CD, STM32F411RD, STM32F411VD, STM32F411CE, STM32F411RE and STM32F411VE Devices */     
+  #define STM32F412Zx
 #endif
    
 /*  Tip: To avoid modifying this file each time you need to switch between these
@@ -140,6 +141,8 @@
   #include "stm32f401xe.h"
 #elif defined(STM32F411xE)
   #include "stm32f411xe.h"
+#elif defined(STM32F412Zx)
+  #include "stm32f412zx.h"
 #else
  #error "Please select first the target STM32F4xx device used in your application (in stm32f4xx.h file)"
 #endif
