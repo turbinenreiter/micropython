@@ -4881,6 +4881,7 @@ typedef struct
 #define  RCC_CSR_WDGRSTF                     0x20000000U
 #define  RCC_CSR_WWDGRSTF                    0x40000000U
 #define  RCC_CSR_LPWRRSTF                    0x80000000U
+#define  RCC_CSR_BORRSTF                     ((uint32_t)0x02000000)
 
 /********************  Bit definition for RCC_SSCGR register  *****************/
 #define  RCC_SSCGR_MODPER                    0x00001FFFU
