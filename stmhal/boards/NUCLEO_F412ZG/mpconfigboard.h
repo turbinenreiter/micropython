@@ -17,9 +17,11 @@
 #define MICROPY_HW_UART6_PORT (GPIOC)
 #define MICROPY_HW_UART6_PINS (GPIO_PIN_6 | GPIO_PIN_7)
 
-// UART 2 connects to the STM32F103 (STLINK) on the Nucleo board
+// UART 3 connects to the STM32F103 (STLINK) on the Nucleo board
 // and this is exposed as a USB Serial port.
-#define MICROPY_HW_UART_REPL        PYB_UART_2
+#define MICROPY_HW_UART3_PORT (GPIOD)
+#define MICROPY_HW_UART3_PINS (GPIO_PIN_8 | GPIO_PIN_9)
+#define MICROPY_HW_UART_REPL        PYB_UART_3
 #define MICROPY_HW_UART_REPL_BAUD   115200
 
 // I2C busses
