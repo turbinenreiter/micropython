@@ -463,3 +463,110 @@ const mp_obj_type_t machine_spi_type = {
    .make_new = machine_spi_make_new,
    .locals_dict = (mp_obj_dict_t*)&machine_spi_locals_dict,
 };
+
+//| :class:`UART` -- a 3duplex serial protocol
+//| -----------------------------------------------
+//|
+//|
+//| .. class:: UART(RX, TX, baudrate=9600)
+//|
+//|
+//|  - ``RX`` is the Receive pin.
+//|  - ``TX`` is the Transmit pin.
+//|  - ``baudrate`` is the SCK clock rate.
+//|
+
+STATIC mp_obj_t machine_uart_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *pos_args) {
+   mp_arg_check_num(n_args, n_kw, 0, MP_OBJ_FUN_ARGS_MAX, true);
+   machine_uart_obj_t *self = m_new_obj(machine_uart_obj_t);
+   self->base.type = &machine_uart_type;
+   mp_map_t kw_args;
+   mp_map_init_fixed_table(&kw_args, n_kw, pos_args + n_args);
+   enum { ARG_RX, ARG_TX, ARG_baudrate};
+   static const mp_arg_t allowed_args[] = {
+       { MP_QSTR_RX, MP_ARG_REQUIRED | MP_ARG_OBJ },
+       { MP_QSTR_TX, MP_ARG_REQUIRED | MP_ARG_OBJ },
+       { MP_QSTR_baudrate, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 9600} },
+   };
+   mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
+   mp_arg_parse_all(n_args, pos_args, &kw_args, MP_ARRAY_SIZE(allowed_args), allowed_args, args);
+   // TODO(tannewt): Replace pin_find with a unified version.
+   const pin_obj_t* rx = pin_find(args[ARG_RX].u_obj);
+   const pin_obj_t* tx = pin_find(args[ARG_TX].u_obj);
+   mp_hal_uart_construct(self, rx, tx, args[ARG_baudrate].u_int);
+   return (mp_obj_t)self;
+}
+
+//|   .. method:: UART.init()
+//|
+//|      Initialises the UART.
+//|
+STATIC mp_obj_t machine_uart_obj_init(mp_obj_t self_in) {
+   machine_uart_obj_t *self = MP_OBJ_TO_PTR(self_in);
+   mp_hal_uart_init(self);
+   return self_in;
+}
+MP_DEFINE_CONST_FUN_OBJ_1(machine_uart_init_obj, machine_uart_obj_init);
+
+//|   .. method:: UART.deinit()
+//|
+//|      Turn off the UART.
+//|
+STATIC mp_obj_t machine_uart_obj_deinit(mp_obj_t self_in) {
+   machine_uart_obj_t *self = MP_OBJ_TO_PTR(self_in);
+   mp_hal_uart_deinit(self);
+   return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_1(machine_uart_deinit_obj, machine_uart_obj_deinit);
+
+STATIC mp_obj_t machine_uart_obj___exit__(size_t n_args, const mp_obj_t *args) {
+    (void)n_args;
+    mp_hal_uart_deinit(args[0]);
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(machine_uart_obj___exit___obj, 4, 4, machine_uart_obj___exit__);
+
+//|   .. method:: UART.write(buf)
+//|
+//|       Write the data contained in ``buf``.
+//|       Returns the number of bytes written.
+//|
+STATIC mp_obj_t mp_machine_uart_write(mp_obj_t self_in, mp_obj_t wr_buf) {
+    mp_buffer_info_t src;
+    mp_get_buffer_raise(wr_buf, &src, MP_BUFFER_READ);
+    machine_uart_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    mp_hal_uart_write(self, (uint8_t *) src.buf, src.len);
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_2(mp_machine_uart_write_obj, mp_machine_uart_write);
+
+//|   .. method:: uart.read(len)
+//|
+//|       Read number of characters specified in ``len``.
+//|       Return the string.
+//|
+STATIC mp_obj_t mp_machine_uart_read(size_t n_args, const mp_obj_t *args) {
+    vstr_t vstr;
+    vstr_init_len(&vstr, mp_obj_get_int(args[1]));
+    memset(vstr.buf, n_args == 3 ? mp_obj_get_int(args[2]) : 0, vstr.len);
+    mp_hal_uart_read(args[0], (uint8_t *) vstr.buf, vstr.len);
+    return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+}
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mp_machine_uart_read_obj, 2, 3, mp_machine_uart_read);
+
+STATIC const mp_rom_map_elem_t machine_uart_locals_dict_table[] = {
+    { MP_ROM_QSTR(MP_QSTR_init), MP_ROM_PTR(&machine_uart_init_obj) },
+    { MP_ROM_QSTR(MP_QSTR_deinit), MP_ROM_PTR(&machine_uart_deinit_obj) },
+    { MP_ROM_QSTR(MP_QSTR___enter__), MP_ROM_PTR(&machine_uart_init_obj) },
+    { MP_ROM_QSTR(MP_QSTR___exit__), MP_ROM_PTR(&machine_uart_obj___exit___obj) },
+    { MP_ROM_QSTR(MP_QSTR_read), MP_ROM_PTR(&mp_machine_uart_read_obj) },
+    { MP_ROM_QSTR(MP_QSTR_write), MP_ROM_PTR(&mp_machine_uart_write_obj) },
+};
+STATIC MP_DEFINE_CONST_DICT(machine_uart_locals_dict, machine_uart_locals_dict_table);
+
+const mp_obj_type_t machine_uart_type = {
+   { &mp_type_type },
+   .name = MP_QSTR_UART,
+   .make_new = machine_uart_make_new,
+   .locals_dict = (mp_obj_dict_t*)&machine_uart_locals_dict,
+};

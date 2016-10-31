@@ -30,6 +30,7 @@
 #include "shared-bindings/modules/machine.h"
 #include "py/nlr.h"
 
+// TODO(turbinenreiter) this can be removed I guess
 #include "asf/sam0/drivers/sercom/i2c/i2c_master.h"
 
 
@@ -264,4 +265,76 @@ void mp_hal_spi_transfer(machine_spi_obj_t *self, size_t len, const uint8_t *src
     if (status != STATUS_OK) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, "SPI bus error"));
     }
+}
+
+void mp_hal_uart_construct(machine_uart_obj_t *self, const pin_obj_t * rx,
+                           const pin_obj_t * tx, uint32_t baudrate) {
+    struct usart_config config_usart;
+    usart_get_config_defaults(&config_usart);
+
+    // Depends on where RX and TX are.
+    // TODO(turbinenreiter) make this right, for now just ignore
+/*    uint8_t dopo = 8;*/
+/*    if (clock->primary_sercom.pad == 1) {*/
+/*        if (mosi->primary_sercom.pad == 0) {*/
+/*            dopo = 0;*/
+/*        } else if (mosi->primary_sercom.pad == 3) {*/
+/*            dopo = 2;*/
+/*        }*/
+/*    } else if (clock->primary_sercom.pad == 3) {*/
+/*        if (mosi->primary_sercom.pad == 0) {*/
+/*            dopo = 3;*/
+/*        } else if (mosi->primary_sercom.pad == 2) {*/
+/*            dopo = 1;*/
+/*        }*/
+/*    }*/
+/*    if (dopo == 8) {*/
+/*        nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, "RX and TX pins incompatible."));*/
+/*    }*/
+
+    config_usart.mux_setting = (SERCOM_USART_CTRLA_RXPO(0) | SERCOM_USART_CTRLA_TXPO(1));
+
+    // Map pad to pinmux through a short array.
+    uint32_t *pinmuxes[4] = {&config_usart.pinmux_pad0,
+                             &config_usart.pinmux_pad1,
+                             &config_usart.pinmux_pad2,
+                             &config_usart.pinmux_pad3};
+    *pinmuxes[rx->primary_sercom.pad] = rx->primary_sercom.pinmux;
+    *pinmuxes[tx->primary_sercom.pad] = tx->primary_sercom.pinmux;
+
+    config_usart.baudrate = baudrate;
+
+    usart_init(&self->uart_instance, rx->primary_sercom.sercom, &config_usart);
+}
+
+void mp_hal_uart_init(machine_uart_obj_t *self) {
+    usart_enable(&self->uart_instance);
+}
+
+void mp_hal_uart_deinit(machine_uart_obj_t *self) {
+    usart_disable(&self->uart_instance);
+}
+
+// Read characters.
+extern void mp_hal_uart_read(machine_uart_obj_t *self, 
+                             uint8_t *data, size_t len) {
+    usart_enable_transceiver(&self->uart_instance, USART_TRANSCEIVER_TX);
+    enum status_code status = usart_read_buffer_wait(
+        &self->uart_instance, (uint8_t *) data, len);
+    if (status != STATUS_OK) {
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, "USART read error"));
+    }
+    usart_disable_transceiver(&self->uart_instance, USART_TRANSCEIVER_TX);
+}
+
+// Write characters.
+extern void mp_hal_uart_write(machine_uart_obj_t *self, 
+                              uint8_t *data, size_t len) {
+    usart_enable_transceiver(&self->uart_instance, USART_TRANSCEIVER_RX);
+    enum status_code status = usart_write_buffer_wait(
+        &self->uart_instance, (uint8_t *) data, len);
+    if (status != STATUS_OK) {
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, "USART write error"));
+    }
+    usart_disable_transceiver(&self->uart_instance, USART_TRANSCEIVER_RX);
 }

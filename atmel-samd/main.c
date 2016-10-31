@@ -54,28 +54,30 @@ void do_str(const char *src, mp_parse_input_kind_t input_kind) {
 // a url to all of the files that ship on boards.
 
 static const char fresh_boot_py[] =
-"# boot.py -- run on boot-up\r\n"
-"# can run arbitrary Python, but best to keep it minimal\r\n"
+/*"# boot.py -- run on boot-up\r\n"*/
+/*"# can run arbitrary Python, but best to keep it minimal\r\n"*/
 "\r\n"
 ;
 
 static const char fresh_main_py[] =
-"# main.py -- put your code here!\r\n"
+/*"# main.py -- put your code here!\r\n"*/
+"\r\n"
 ;
 
 static const char fresh_readme_txt[] =
-"This is a MicroPython board\r\n"
+/*"This is a MicroPython board\r\n"*/
+/*"\r\n"*/
+/*"You can get started right away by writing your Python code in 'main.py'.\r\n"*/
+/*"\r\n"*/
+/*"For a serial prompt:\r\n"*/
+/*" - Windows: you need to go to 'Device manager', right click on the unknown device,\r\n"*/
+/*"   then update the driver software, using the 'pybcdc.inf' file found on this drive.\r\n"*/
+/*"   Then use a terminal program like Hyperterminal or putty.\r\n"*/
+/*" - Mac OS X: use the command: screen /dev/tty.usbmodem*\r\n"*/
+/*" - Linux: use the command: screen /dev/ttyACM0\r\n"*/
+/*"\r\n"*/
+/*"Please visit http://micropython.org/help/ for further help.\r\n"*/
 "\r\n"
-"You can get started right away by writing your Python code in 'main.py'.\r\n"
-"\r\n"
-"For a serial prompt:\r\n"
-" - Windows: you need to go to 'Device manager', right click on the unknown device,\r\n"
-"   then update the driver software, using the 'pybcdc.inf' file found on this drive.\r\n"
-"   Then use a terminal program like Hyperterminal or putty.\r\n"
-" - Mac OS X: use the command: screen /dev/tty.usbmodem*\r\n"
-" - Linux: use the command: screen /dev/ttyACM0\r\n"
-"\r\n"
-"Please visit http://micropython.org/help/ for further help.\r\n"
 ;
 
 extern void flash_init_vfs(fs_user_mount_t *vfs);
