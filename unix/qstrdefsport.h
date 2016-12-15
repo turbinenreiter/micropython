@@ -25,5 +25,5 @@
  */
 
 Q(dbus)
-Q(test)
+Q(register)
 Q(start)

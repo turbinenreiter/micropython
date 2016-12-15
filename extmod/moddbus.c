@@ -31,11 +31,11 @@
 
 #include <systemd/sd-bus.h>
 
-STATIC mp_obj_t mod_dbus_test(mp_obj_t input) {
-    const char *inp_str = mp_obj_str_get_str(input);
-    return mp_obj_new_str(inp_str, strlen(inp_str), false);
+STATIC mp_obj_t mod_dbus_register(mp_obj_t input) {
+    MP_STATE_PORT(c_dbus_method_obj) = input;
+    return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_dbus_test_obj, mod_dbus_test);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_dbus_register_obj, mod_dbus_register);
 
 static int method_call(sd_bus_message *m, void *userdata, sd_bus_error *ret_error) {
         int64_t x;
@@ -47,6 +47,8 @@ static int method_call(sd_bus_message *m, void *userdata, sd_bus_error *ret_erro
                 fprintf(stderr, "Failed to parse parameters: %s\n", strerror(-r));
                 return r;
         }
+
+        x = mp_obj_get_int(mp_call_function_0(MP_STATE_PORT(c_dbus_method_obj)));
 
         /* Reply with the response */
         return sd_bus_reply_method_return(m, "x", x);
@@ -90,7 +92,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_dbus_start_obj, mod_dbus_start);
 
 STATIC const mp_rom_map_elem_t mp_module_dbus_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_dbus) },
-    { MP_ROM_QSTR(MP_QSTR_test), (mp_obj_t)&mod_dbus_test_obj },
+    { MP_ROM_QSTR(MP_QSTR_register), (mp_obj_t)&mod_dbus_register_obj },
     { MP_ROM_QSTR(MP_QSTR_start), (mp_obj_t)&mod_dbus_start_obj },
 };
 
