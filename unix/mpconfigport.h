@@ -290,6 +290,7 @@ void mp_unix_mark_exec(void);
     const char *readline_hist[50]; \
     mp_obj_t keyboard_interrupt_obj; \
     void *mmap_region_head; \
+    mp_obj_t c_dbus_method_obj; \
 
 // We need to provide a declaration/definition of alloca()
 // unless support for it is disabled.
