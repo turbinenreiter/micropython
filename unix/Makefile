@@ -159,7 +159,7 @@ LIB_SRC_C = $(addprefix lib/,\
 	)
 
 EXTMOD_SRC_C = $(addprefix extmod/,\
-	dbus.c \
+	moddbus.c \
 	)
 
 # FatFS VFS support
