@@ -25,48 +25,233 @@
  */
 
 #include "py/mpconfig.h"
-
 #include "py/obj.h"
 #include "py/runtime.h"
 
 #include <systemd/sd-bus.h>
 
-sd_bus_vtable *test_vtable = NULL;
+sd_bus_vtable *ump_vtable = NULL;
 mp_obj_t *fun_table = NULL;
 int tab_len = 0;
 static sd_bus_vtable start = SD_BUS_VTABLE_START(0);
 static sd_bus_vtable end = SD_BUS_VTABLE_END;
 
-static int method_call(sd_bus_message *m, void *userdata, sd_bus_error *ret_error) {
-    int64_t inp, outp;
-    int r, fun_no;
-    fun_no = 0;
-
-    /* Read the parameters */
-    r = sd_bus_message_read(m, "x", &inp);
-    const char *member = sd_bus_message_get_member(m);
-
+// find_fun ********************************************************************
+int find_fun(const char *member) {
     int i;
     for(i=0; i<tab_len+1; i++) {
-        if(strcmp(member, test_vtable[i+1].x.method.member) == 0) {
-            fun_no = i;
+        if(strcmp(member, ump_vtable[i+1].x.method.member) == 0) {
             break;
         }
     }
+    return i;
+}
 
-    mp_obj_t inp_obj = mp_obj_new_int_from_ll(inp);
+// method_call *****************************************************************
+static int method_call(sd_bus_message *m, void *userdata, sd_bus_error *ret_error) {
+    int fun_no = find_fun(sd_bus_message_get_member(m));
+    const char *out_type = ump_vtable[fun_no+1].x.method.result;
+
+    switch(out_type[0]) {
+        case 'b':
+            return sd_bus_reply_method_return(m, out_type,
+                                              mp_obj_get_int(
+                                              mp_call_function_0(
+                                              fun_table[fun_no])));
+        case 'x':
+                /* Reply with the response */
+            return sd_bus_reply_method_return(m, out_type,
+                                              mp_obj_get_int(
+                                              mp_call_function_0(
+                                              fun_table[fun_no])));
+        case 'd':
+            return sd_bus_reply_method_return(m, out_type,
+                                              mp_obj_get_float(
+                                              mp_call_function_0(
+                                              fun_table[fun_no])));
+        case 's':
+            return sd_bus_reply_method_return(m, out_type,
+                                              qstr_str(
+                                              mp_obj_str_get_qstr(
+                                              mp_call_function_0(
+                                              fun_table[fun_no]))));
+    }
+    return -1;
+}
+
+// method_call_b ***************************************************************
+static int method_call_b(sd_bus_message *m, void *userdata, sd_bus_error *ret_error) {
+    int inp;
+    int fun_no = find_fun(sd_bus_message_get_member(m));
+    const char *out_type = ump_vtable[fun_no+1].x.method.result;
+    int r;
+
+    /* Read the parameters */
+    r = sd_bus_message_read(m, "b", &inp);
     if (r < 0) {
             fprintf(stderr, "Failed to parse parameters: %s\n", strerror(-r));
             return r;
     }
+    mp_obj_t inp_obj = mp_obj_new_bool((mp_int_t)inp);
 
-    outp = mp_obj_get_int(mp_call_function_1(fun_table[fun_no],
-                                             inp_obj));
-
-    /* Reply with the response */
-    return sd_bus_reply_method_return(m, "x", outp);
+    switch(out_type[0]) {
+        case 'b':
+            return sd_bus_reply_method_return(m, out_type,
+                                              mp_obj_get_int(
+                                              mp_call_function_1(
+                                              fun_table[fun_no], inp_obj)));
+        case 'x':
+                /* Reply with the response */
+            return sd_bus_reply_method_return(m, out_type,
+                                              mp_obj_get_int(
+                                              mp_call_function_1(
+                                              fun_table[fun_no], inp_obj)));
+        case 'd':
+            return sd_bus_reply_method_return(m, out_type,
+                                              mp_obj_get_float(
+                                              mp_call_function_1(
+                                              fun_table[fun_no], inp_obj)));
+        case 's':
+            return sd_bus_reply_method_return(m, out_type,
+                                              qstr_str(
+                                              mp_obj_str_get_qstr(
+                                              mp_call_function_1(
+                                              fun_table[fun_no], inp_obj))));
+    }
+    return -1;
 }
 
+// method_call_x ***************************************************************
+static int method_call_x(sd_bus_message *m, void *userdata, sd_bus_error *ret_error) {
+    int64_t inp;
+    int fun_no = find_fun(sd_bus_message_get_member(m));
+    const char *out_type = ump_vtable[fun_no+1].x.method.result;
+    int r;
+
+    /* Read the parameters */
+    r = sd_bus_message_read(m, "x", &inp);
+    if (r < 0) {
+            fprintf(stderr, "Failed to parse parameters: %s\n", strerror(-r));
+            return r;
+    }
+    mp_obj_t inp_obj = mp_obj_new_int_from_ll(inp);
+
+    switch(out_type[0]) {
+        case 'b':
+            return sd_bus_reply_method_return(m, out_type,
+                                              mp_obj_get_int(
+                                              mp_call_function_1(
+                                              fun_table[fun_no], inp_obj)));
+        case 'x':
+                /* Reply with the response */
+            return sd_bus_reply_method_return(m, out_type,
+                                              mp_obj_get_int(
+                                              mp_call_function_1(
+                                              fun_table[fun_no], inp_obj)));
+        case 'd':
+            return sd_bus_reply_method_return(m, out_type,
+                                              mp_obj_get_float(
+                                              mp_call_function_1(
+                                              fun_table[fun_no], inp_obj)));
+        case 's':
+            return sd_bus_reply_method_return(m, out_type,
+                                              qstr_str(
+                                              mp_obj_str_get_qstr(
+                                              mp_call_function_1(
+                                              fun_table[fun_no], inp_obj))));
+    }
+    return -1;
+}
+
+// method_call_d ***************************************************************
+static int method_call_d(sd_bus_message *m, void *userdata, sd_bus_error *ret_error) {
+    double inp;
+    int fun_no = find_fun(sd_bus_message_get_member(m));
+    const char *out_type = ump_vtable[fun_no+1].x.method.result;
+    int r;
+
+    /* Read the parameters */
+    r = sd_bus_message_read(m, "d", &inp);
+    if (r < 0) {
+            fprintf(stderr, "Failed to parse parameters: %s\n", strerror(-r));
+            return r;
+    }
+    mp_obj_t inp_obj = mp_obj_new_float((mp_float_t)inp);
+
+    switch(out_type[0]) {
+        case 'b':
+            return sd_bus_reply_method_return(m, out_type,
+                                              mp_obj_get_int(
+                                              mp_call_function_1(
+                                              fun_table[fun_no], inp_obj)));
+        case 'x':
+                /* Reply with the response */
+            return sd_bus_reply_method_return(m, out_type,
+                                              mp_obj_get_int(
+                                              mp_call_function_1(
+                                              fun_table[fun_no], inp_obj)));
+        case 'd':
+            return sd_bus_reply_method_return(m, out_type,
+                                              mp_obj_get_float(
+                                              mp_call_function_1(
+                                              fun_table[fun_no], inp_obj)));
+        case 's':
+            return sd_bus_reply_method_return(m, out_type,
+                                              qstr_str(
+                                              mp_obj_str_get_qstr(
+                                              mp_call_function_1(
+                                              fun_table[fun_no], inp_obj))));
+    }
+    return -1;
+}
+
+// method_call_s ***************************************************************
+static int method_call_s(sd_bus_message *m, void *userdata, sd_bus_error *ret_error) {
+    char* inp;
+    int fun_no = find_fun(sd_bus_message_get_member(m));
+    const char *out_type = ump_vtable[fun_no+1].x.method.result;
+    int r;
+
+    /* Read the parameters */
+    r = sd_bus_message_read(m, "s", &inp);
+    if (r < 0) {
+            fprintf(stderr, "Failed to parse parameters: %s\n", strerror(-r));
+            return r;
+    }
+    mp_obj_t inp_obj = mp_obj_new_str(inp, (mp_uint_t)sizeof(inp), 1);
+
+    switch(out_type[0]) {
+        case 'b':
+            return sd_bus_reply_method_return(m, out_type,
+                                              mp_obj_get_int(
+                                              mp_call_function_1(
+                                              fun_table[fun_no], inp_obj)));
+        case 'x':
+                /* Reply with the response */
+            return sd_bus_reply_method_return(m, out_type,
+                                              mp_obj_get_int(
+                                              mp_call_function_1(
+                                              fun_table[fun_no], inp_obj)));
+        case 'd':
+            return sd_bus_reply_method_return(m, out_type,
+                                              mp_obj_get_float(
+                                              mp_call_function_1(
+                                              fun_table[fun_no], inp_obj)));
+        case 's':
+            return sd_bus_reply_method_return(m, out_type,
+                                              qstr_str(
+                                              mp_obj_str_get_qstr(
+                                              mp_call_function_1(
+                                              fun_table[fun_no], inp_obj))));
+    }
+    return -1;
+}
+
+// call_table ******************************************************************
+int (*call_table[5]) (sd_bus_message *m, void *userdata, sd_bus_error *ret_error) = {
+    method_call, method_call_b, method_call_x, method_call_d, method_call_s};
+
+// dbus.register ***************************************************************
 STATIC mp_obj_t mod_dbus_register(mp_obj_t function, mp_obj_t inp, mp_obj_t outp) {
     qstr qstr_fun_name = mp_obj_fun_get_name(function);
     qstr qstr_inp = mp_obj_str_get_qstr(inp);
@@ -77,26 +262,44 @@ STATIC mp_obj_t mod_dbus_register(mp_obj_t function, mp_obj_t inp, mp_obj_t outp
                           sizeof(mp_obj_t)*tab_len+1);
     fun_table[tab_len] = function;
 
-    // sd_bus_add_object_vtable
-    test_vtable = m_realloc(test_vtable,
+    ump_vtable = m_realloc(ump_vtable,
                             sizeof(struct sd_bus_vtable)*(tab_len+2),
                             sizeof(struct sd_bus_vtable)*(tab_len+3));
     tab_len++;
 
-    sd_bus_vtable new_elem = SD_BUS_METHOD(qstr_str(qstr_fun_name),
-                                           qstr_str(qstr_inp),
-                                           qstr_str(qstr_outp),
-                                           method_call,
-                                           SD_BUS_VTABLE_UNPRIVILEGED);
+    int inp_type = 0;
+    const char* str_inp = qstr_str(qstr_inp);
+    switch((char)qstr_str(qstr_inp)[0]) {
+        case 'N':
+            str_inp = NULL; break;
+        case 'b':
+            inp_type = 1; break;
+        case 'x':
+            inp_type = 2; break;
+        case 'd':
+            inp_type = 3; break;
+        case 's':
+            inp_type = 4; break;
+    }
 
-    test_vtable[0] = start;
-    test_vtable[tab_len] = new_elem;
-    test_vtable[tab_len+1] = end;
+    printf("with input %s ", str_inp);
 
-    return MP_OBJ_NEW_QSTR(qstr_fun_name);//mp_const_none;
+    sd_bus_vtable new_elem = SD_BUS_METHOD(
+                   qstr_str(qstr_fun_name),
+                   str_inp,
+                   qstr_str(qstr_outp),
+                   call_table[inp_type],
+                   SD_BUS_VTABLE_UNPRIVILEGED);
+
+    ump_vtable[0] = start;
+    ump_vtable[tab_len] = new_elem;
+    ump_vtable[tab_len+1] = end;
+
+    return MP_OBJ_NEW_QSTR(qstr_fun_name);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_dbus_register_obj, mod_dbus_register);
 
+// dbus.run ********************************************************************
 STATIC mp_obj_t mod_dbus_run(mp_obj_t interface_name, mp_obj_t object_path) {
     const char *name = mp_obj_str_get_str(interface_name);
     const char *path = mp_obj_str_get_str(object_path);
@@ -117,7 +320,7 @@ STATIC mp_obj_t mod_dbus_run(mp_obj_t interface_name, mp_obj_t object_path) {
                                  &slot,
                                  path,
                                  name,
-                                 test_vtable,
+                                 ump_vtable,
                                  NULL);
     if (r < 0) {
             fprintf(stderr, "Failed to issue method call: %s\n", strerror(-r));
@@ -157,6 +360,7 @@ finish:
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_dbus_run_obj, mod_dbus_run);
 
+// dbus bindings ***************************************************************
 STATIC const mp_rom_map_elem_t mp_module_dbus_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_dbus) },
     { MP_ROM_QSTR(MP_QSTR_register), (mp_obj_t)&mod_dbus_register_obj },
