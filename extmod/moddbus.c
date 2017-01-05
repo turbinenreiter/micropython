@@ -47,209 +47,142 @@ int find_fun(const char *member) {
     return i;
 }
 
-// method_call *****************************************************************
-static int method_call(sd_bus_message *m, void *userdata, sd_bus_error *ret_error) {
+// method_call_0 ***************************************************************
+static int method_call_0(sd_bus_message *m, void *userdata, sd_bus_error *ret_error) {
     int fun_no = find_fun(sd_bus_message_get_member(m));
     const char *out_type = ump_vtable[fun_no+1].x.method.result;
+    mp_uint_t out_len = 1;
+    mp_obj_t out_obj = NULL;
 
-    switch(out_type[0]) {
-        case 'b':
-            return sd_bus_reply_method_return(m, out_type,
-                                              mp_obj_get_int(
-                                              mp_call_function_0(
-                                              fun_table[fun_no])));
-        case 'x':
-                /* Reply with the response */
-            return sd_bus_reply_method_return(m, out_type,
-                                              mp_obj_get_int(
-                                              mp_call_function_0(
-                                              fun_table[fun_no])));
-        case 'd':
-            return sd_bus_reply_method_return(m, out_type,
-                                              mp_obj_get_float(
-                                              mp_call_function_0(
-                                              fun_table[fun_no])));
-        case 's':
-            return sd_bus_reply_method_return(m, out_type,
-                                              qstr_str(
-                                              mp_obj_str_get_qstr(
-                                              mp_call_function_0(
-                                              fun_table[fun_no]))));
+    /* Reply with the response */
+    if (out_type[0] == 'a') {
+        switch(out_type[1]) {
+            case 'b': // TODO pick up here
+                out_obj = mp_obj_new_list(out_len,
+                                          mp_call_function_0(fun_table[fun_no]));
+                return sd_bus_reply_method_return(m, out_type, out_len,
+                                                  1);//mp_obj_get_int(out_obj));
+            case 'y': case 'n': case 'i': case 'x': case 'q': case 'u': case 't':
+                out_obj = mp_call_function_0(fun_table[fun_no]);
+                return sd_bus_reply_method_return(m, out_type, out_len,
+                                                  mp_obj_get_int(out_obj));
+            case 'd':
+                out_obj = mp_call_function_0(fun_table[fun_no]);
+                return sd_bus_reply_method_return(m, out_type, out_len,
+                                                  mp_obj_get_float(out_obj));
+            case 's':
+                out_obj = mp_call_function_0(fun_table[fun_no]);
+                return sd_bus_reply_method_return(m, out_type, out_len,
+                                                  qstr_str(
+                                                  mp_obj_str_get_qstr(out_obj)));
+        }
+    } else {
+        switch(out_type[0]) {
+            case 'b':
+                out_obj = mp_call_function_0(fun_table[fun_no]);
+                return sd_bus_reply_method_return(m, out_type, out_len,
+                                                  mp_obj_get_int(out_obj));
+            case 'y': case 'n': case 'i': case 'x': case 'q': case 'u': case 't':
+                out_obj = mp_call_function_0(fun_table[fun_no]);
+                return sd_bus_reply_method_return(m, out_type, out_len,
+                                                  mp_obj_get_int(out_obj));
+            case 'd':
+                out_obj = mp_call_function_0(fun_table[fun_no]);
+                return sd_bus_reply_method_return(m, out_type, out_len,
+                                                  mp_obj_get_float(out_obj));
+            case 's':
+                out_obj = mp_call_function_0(fun_table[fun_no]);
+                return sd_bus_reply_method_return(m, out_type, out_len,
+                                                  qstr_str(
+                                                  mp_obj_str_get_qstr(out_obj)));
+        }
     }
     return -1;
 }
 
-// method_call_b ***************************************************************
-static int method_call_b(sd_bus_message *m, void *userdata, sd_bus_error *ret_error) {
-    int inp;
+// method_call_1 ***************************************************************
+static int method_call_1(sd_bus_message *m, void *userdata, sd_bus_error *ret_error) {
     int fun_no = find_fun(sd_bus_message_get_member(m));
+    const char *inp_type = ump_vtable[fun_no+1].x.method.signature;
     const char *out_type = ump_vtable[fun_no+1].x.method.result;
-    int r;
+    void *ptr_inp = NULL;
+    mp_obj_t inp_obj = NULL;
+    int out_len = 1;
+    mp_obj_t out_obj = NULL;
 
     /* Read the parameters */
-    r = sd_bus_message_read(m, "b", &inp);
-    if (r < 0) {
-            fprintf(stderr, "Failed to parse parameters: %s\n", strerror(-r));
-            return r;
-    }
-    mp_obj_t inp_obj = mp_obj_new_bool((mp_int_t)inp);
-
-    switch(out_type[0]) {
+    switch(inp_type[0]) {
         case 'b':
-            return sd_bus_reply_method_return(m, out_type,
-                                              mp_obj_get_int(
-                                              mp_call_function_1(
-                                              fun_table[fun_no], inp_obj)));
-        case 'x':
-                /* Reply with the response */
-            return sd_bus_reply_method_return(m, out_type,
-                                              mp_obj_get_int(
-                                              mp_call_function_1(
-                                              fun_table[fun_no], inp_obj)));
+            ptr_inp = m_malloc(sizeof(int));
+            sd_bus_message_read(m, inp_type, ptr_inp);
+            inp_obj = mp_obj_new_bool((mp_int_t)*(int*)ptr_inp);
+            break;
+        case 'y': case 'n': case 'i': case 'x': case 'q': case 'u': case 't':
+            ptr_inp = m_malloc(sizeof(int64_t));
+            sd_bus_message_read(m, inp_type, ptr_inp);
+            inp_obj = mp_obj_new_int_from_ll(*(int64_t*)ptr_inp);
+            break;
         case 'd':
-            return sd_bus_reply_method_return(m, out_type,
-                                              mp_obj_get_float(
-                                              mp_call_function_1(
-                                              fun_table[fun_no], inp_obj)));
+            ptr_inp = m_malloc(sizeof(double));
+            sd_bus_message_read(m, inp_type, ptr_inp);
+            inp_obj = mp_obj_new_float((mp_float_t)*(double*)ptr_inp);
+            break;
         case 's':
-            return sd_bus_reply_method_return(m, out_type,
-                                              qstr_str(
-                                              mp_obj_str_get_qstr(
-                                              mp_call_function_1(
-                                              fun_table[fun_no], inp_obj))));
+            ptr_inp = m_malloc(sizeof(char*));
+            sd_bus_message_read(m, inp_type, ptr_inp);
+            inp_obj = mp_obj_new_str(*(char**)ptr_inp,
+                                     (mp_uint_t)sizeof(*(char**)ptr_inp), 1);
+            break;
     }
-    return -1;
-}
 
-// method_call_x ***************************************************************
-static int method_call_x(sd_bus_message *m, void *userdata, sd_bus_error *ret_error) {
-    int64_t inp;
-    int fun_no = find_fun(sd_bus_message_get_member(m));
-    const char *out_type = ump_vtable[fun_no+1].x.method.result;
-    int r;
-
-    /* Read the parameters */
-    r = sd_bus_message_read(m, "x", &inp);
-    if (r < 0) {
-            fprintf(stderr, "Failed to parse parameters: %s\n", strerror(-r));
-            return r;
-    }
-    mp_obj_t inp_obj = mp_obj_new_int_from_ll(inp);
-
-    switch(out_type[0]) {
-        case 'b':
-            return sd_bus_reply_method_return(m, out_type,
-                                              mp_obj_get_int(
-                                              mp_call_function_1(
-                                              fun_table[fun_no], inp_obj)));
-        case 'x':
-                /* Reply with the response */
-            return sd_bus_reply_method_return(m, out_type,
-                                              mp_obj_get_int(
-                                              mp_call_function_1(
-                                              fun_table[fun_no], inp_obj)));
-        case 'd':
-            return sd_bus_reply_method_return(m, out_type,
-                                              mp_obj_get_float(
-                                              mp_call_function_1(
-                                              fun_table[fun_no], inp_obj)));
-        case 's':
-            return sd_bus_reply_method_return(m, out_type,
-                                              qstr_str(
-                                              mp_obj_str_get_qstr(
-                                              mp_call_function_1(
-                                              fun_table[fun_no], inp_obj))));
-    }
-    return -1;
-}
-
-// method_call_d ***************************************************************
-static int method_call_d(sd_bus_message *m, void *userdata, sd_bus_error *ret_error) {
-    double inp;
-    int fun_no = find_fun(sd_bus_message_get_member(m));
-    const char *out_type = ump_vtable[fun_no+1].x.method.result;
-    int r;
-
-    /* Read the parameters */
-    r = sd_bus_message_read(m, "d", &inp);
-    if (r < 0) {
-            fprintf(stderr, "Failed to parse parameters: %s\n", strerror(-r));
-            return r;
-    }
-    mp_obj_t inp_obj = mp_obj_new_float((mp_float_t)inp);
-
-    switch(out_type[0]) {
-        case 'b':
-            return sd_bus_reply_method_return(m, out_type,
-                                              mp_obj_get_int(
-                                              mp_call_function_1(
-                                              fun_table[fun_no], inp_obj)));
-        case 'x':
-                /* Reply with the response */
-            return sd_bus_reply_method_return(m, out_type,
-                                              mp_obj_get_int(
-                                              mp_call_function_1(
-                                              fun_table[fun_no], inp_obj)));
-        case 'd':
-            return sd_bus_reply_method_return(m, out_type,
-                                              mp_obj_get_float(
-                                              mp_call_function_1(
-                                              fun_table[fun_no], inp_obj)));
-        case 's':
-            return sd_bus_reply_method_return(m, out_type,
-                                              qstr_str(
-                                              mp_obj_str_get_qstr(
-                                              mp_call_function_1(
-                                              fun_table[fun_no], inp_obj))));
-    }
-    return -1;
-}
-
-// method_call_s ***************************************************************
-static int method_call_s(sd_bus_message *m, void *userdata, sd_bus_error *ret_error) {
-    char* inp;
-    int fun_no = find_fun(sd_bus_message_get_member(m));
-    const char *out_type = ump_vtable[fun_no+1].x.method.result;
-    int r;
-
-    /* Read the parameters */
-    r = sd_bus_message_read(m, "s", &inp);
-    if (r < 0) {
-            fprintf(stderr, "Failed to parse parameters: %s\n", strerror(-r));
-            return r;
-    }
-    mp_obj_t inp_obj = mp_obj_new_str(inp, (mp_uint_t)sizeof(inp), 1);
-
-    switch(out_type[0]) {
-        case 'b':
-            return sd_bus_reply_method_return(m, out_type,
-                                              mp_obj_get_int(
-                                              mp_call_function_1(
-                                              fun_table[fun_no], inp_obj)));
-        case 'x':
-                /* Reply with the response */
-            return sd_bus_reply_method_return(m, out_type,
-                                              mp_obj_get_int(
-                                              mp_call_function_1(
-                                              fun_table[fun_no], inp_obj)));
-        case 'd':
-            return sd_bus_reply_method_return(m, out_type,
-                                              mp_obj_get_float(
-                                              mp_call_function_1(
-                                              fun_table[fun_no], inp_obj)));
-        case 's':
-            return sd_bus_reply_method_return(m, out_type,
-                                              qstr_str(
-                                              mp_obj_str_get_qstr(
-                                              mp_call_function_1(
-                                              fun_table[fun_no], inp_obj))));
+    /* Reply with the response */
+    if (out_type[0] == 'a') {
+        switch(out_type[1]) {
+                case 'b':
+                    out_obj = mp_call_function_1(fun_table[fun_no], inp_obj);
+                    return sd_bus_reply_method_return(m, out_type, out_len,
+                                                      mp_obj_get_int(out_obj));
+                case 'y': case 'n': case 'i': case 'x': case 'q': case 'u': case 't':
+                    out_obj = mp_call_function_1(fun_table[fun_no], inp_obj);
+                    return sd_bus_reply_method_return(m, out_type, out_len,
+                                                      mp_obj_get_int(out_obj));
+                case 'd':
+                    out_obj = mp_call_function_1(fun_table[fun_no], inp_obj);
+                    return sd_bus_reply_method_return(m, out_type, out_len,
+                                                      mp_obj_get_float(out_obj));
+                case 's':
+                    out_obj = mp_call_function_1(fun_table[fun_no], inp_obj);
+                    return sd_bus_reply_method_return(m, out_type, out_len,
+                                                      qstr_str(
+                                                      mp_obj_str_get_qstr(out_obj)));
+            }
+    } else {
+        switch(out_type[0]) {
+            case 'b':
+                out_obj = mp_call_function_1(fun_table[fun_no], inp_obj);
+                return sd_bus_reply_method_return(m, out_type,
+                                                  mp_obj_get_int(out_obj));
+            case 'y': case 'n': case 'i': case 'x': case 'q': case 'u': case 't':
+                out_obj = mp_call_function_1(fun_table[fun_no], inp_obj);
+                return sd_bus_reply_method_return(m, out_type,
+                                                  mp_obj_get_int(out_obj));
+            case 'd':
+                out_obj = mp_call_function_1(fun_table[fun_no], inp_obj);
+                return sd_bus_reply_method_return(m, out_type,
+                                                  mp_obj_get_float(out_obj));
+            case 's':
+                out_obj = mp_call_function_1(fun_table[fun_no], inp_obj);
+                return sd_bus_reply_method_return(m, out_type,
+                                                  qstr_str(
+                                                  mp_obj_str_get_qstr(out_obj)));
+        }
     }
     return -1;
 }
 
 // call_table ******************************************************************
-int (*call_table[5]) (sd_bus_message *m, void *userdata, sd_bus_error *ret_error) = {
-    method_call, method_call_b, method_call_x, method_call_d, method_call_s};
+int (*call_table[2]) (sd_bus_message *m, void *userdata, sd_bus_error *ret_error) = {
+    method_call_0, method_call_1};
 
 // dbus.register ***************************************************************
 STATIC mp_obj_t mod_dbus_register(mp_obj_t function, mp_obj_t inp, mp_obj_t outp) {
@@ -267,22 +200,14 @@ STATIC mp_obj_t mod_dbus_register(mp_obj_t function, mp_obj_t inp, mp_obj_t outp
                             sizeof(struct sd_bus_vtable)*(tab_len+3));
     tab_len++;
 
-    int inp_type = 0;
+    int inp_type;
     const char* str_inp = qstr_str(qstr_inp);
-    switch((char)qstr_str(qstr_inp)[0]) {
-        case 'N':
-            str_inp = NULL; break;
-        case 'b':
-            inp_type = 1; break;
-        case 'x':
-            inp_type = 2; break;
-        case 'd':
-            inp_type = 3; break;
-        case 's':
-            inp_type = 4; break;
+    if (strcmp(str_inp, "NULL") == 0) {
+        str_inp = NULL;
+        inp_type = 0;
+    } else {
+        inp_type = 1;
     }
-
-    printf("with input %s ", str_inp);
 
     sd_bus_vtable new_elem = SD_BUS_METHOD(
                    qstr_str(qstr_fun_name),
@@ -327,7 +252,6 @@ STATIC mp_obj_t mod_dbus_run(mp_obj_t interface_name, mp_obj_t object_path) {
             goto finish;
     }
 
-
     /* Request a name */
     r = sd_bus_request_name(bus, name, 0);
     if (r < 0) {
@@ -342,8 +266,6 @@ STATIC mp_obj_t mod_dbus_run(mp_obj_t interface_name, mp_obj_t object_path) {
                     fprintf(stderr, "Failed to process bus: %s\n", strerror(-r));
                     goto finish;
             }
-            if (r > 0) /* we processed a request, try to process another one, right-away */
-                    continue;
 
             /* Wait for the next request to process */
             r = sd_bus_wait(bus, (uint64_t) -1);
