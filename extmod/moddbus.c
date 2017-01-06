@@ -58,8 +58,10 @@ static int method_call_0(sd_bus_message *m, void *userdata, sd_bus_error *ret_er
     sd_bus_message *answer = NULL;
     int i;
 
-    /* Reply with the response */
-    if (out_type[0] == 'a') {
+    if (out_type == NULL) {
+        mp_call_function_0(fun_table[fun_no]);
+        return sd_bus_reply_method_return(m, NULL);
+    } else if (out_type[0] == 'a') {
         switch(out_type[1]) {
             case 'b':
                 printf("Can not return array of booleans.");
@@ -155,8 +157,10 @@ static int method_call_1(sd_bus_message *m, void *userdata, sd_bus_error *ret_er
             break;
     }
 
-    /* Reply with the response */
-    if (out_type[0] == 'a') {
+    if (out_type == NULL) {
+        mp_call_function_1(fun_table[fun_no], inp_obj);
+        return sd_bus_reply_method_return(m, NULL);
+    } else if (out_type[0] == 'a') {
         switch(out_type[1]) {
             case 'b':
                 out_obj = mp_call_function_1(fun_table[fun_no], inp_obj);
@@ -243,10 +247,15 @@ STATIC mp_obj_t mod_dbus_register(mp_obj_t function, mp_obj_t inp, mp_obj_t outp
         inp_type = 1;
     }
 
+    const char * str_out = qstr_str(qstr_outp);
+    if (strcmp(str_out, "NULL") == 0) {
+        str_out = NULL;
+    }
+
     sd_bus_vtable new_elem = SD_BUS_METHOD(
                    qstr_str(qstr_fun_name),
                    str_inp,
-                   qstr_str(qstr_outp),
+                   str_out,
                    call_table[inp_type],
                    SD_BUS_VTABLE_UNPRIVILEGED);
 
