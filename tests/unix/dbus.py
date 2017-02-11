@@ -116,7 +116,8 @@ print('registered', dbus.register(fooxad, 'x', 'ad'))
 print('init space.plamauer.test', dbus.init('space.plamauer.test', '/space/plamauer/test'))
 
 print('run space.plamauer.test')
-for i in range(100):
+for i in range(10):
     print('process requests', dbus.process(1))
+    print('signal', dbus.signal('space.plamauer.signal', '/space/plamauer/signal', 'test_signal'))
 
 print('deinit space.plamauer.test', dbus.deinit())

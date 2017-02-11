@@ -276,7 +276,7 @@ STATIC mp_obj_t mod_dbus_init(mp_obj_t interface_name, mp_obj_t object_path) {
 
     //sd_bus_slot *slot = NULL;
     //sd_bus *bus = NULL;
-    int r;
+    int r = 0;
 
     /* Connect to the user bus */
     r = sd_bus_open_user(&bus);
@@ -308,7 +308,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_dbus_int_obj, mod_dbus_init);
 // dbus.process ****************************************************************
 STATIC mp_obj_t mod_dbus_process(mp_obj_t timeout_ms) {
     uint64_t timeout = mp_obj_get_int(timeout_ms) * 1000;
-    int r;
+    int r = 0;
 
     /* Process requests */
     r = sd_bus_process(bus, NULL);
@@ -326,6 +326,25 @@ STATIC mp_obj_t mod_dbus_process(mp_obj_t timeout_ms) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_dbus_process_obj, mod_dbus_process);
 
+// dbus.signal *****************************************************************
+STATIC mp_obj_t mod_dbus_signal(mp_obj_t interface_name, mp_obj_t object_path,
+                                mp_obj_t signal_name) {
+    const char *name = mp_obj_str_get_str(interface_name);
+    const char *path = mp_obj_str_get_str(object_path);
+    const char *signal = mp_obj_str_get_str(signal_name);
+    int r = 0;
+
+    r = sd_bus_emit_signal(bus,
+                           path,
+                           name,
+                           signal, "y", 1);
+                if (r < 0) {
+                    printf("Failed to emit signal: %s\n", strerror(-r));
+                }
+    return MP_OBJ_NEW_SMALL_INT(r);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_dbus_signal_obj, mod_dbus_signal);
+
 // dbus.deinit *****************************************************************
 STATIC mp_obj_t mod_dbus_deinit() {
     sd_bus_slot_unref(slot);
@@ -339,6 +358,7 @@ STATIC const mp_rom_map_elem_t mp_module_dbus_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_dbus) },
     { MP_ROM_QSTR(MP_QSTR_register), (mp_obj_t)&mod_dbus_register_obj },
     { MP_ROM_QSTR(MP_QSTR_process), (mp_obj_t)&mod_dbus_process_obj },
+    { MP_ROM_QSTR(MP_QSTR_signal), (mp_obj_t)&mod_dbus_signal_obj },
     { MP_ROM_QSTR(MP_QSTR_init), (mp_obj_t)&mod_dbus_int_obj },
     { MP_ROM_QSTR(MP_QSTR_deinit), (mp_obj_t)&mod_dbus_deinit_obj },
 };

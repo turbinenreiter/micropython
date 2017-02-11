@@ -29,103 +29,23 @@ registered fooxad
 init space.plamauer.test 1
 run space.plamauer.test
 process requests 0
+signal 1
 process requests 0
+signal 1
 process requests 0
+signal 1
 process requests 0
+signal 1
 process requests 0
+signal 1
 process requests 0
+signal 1
 process requests 0
+signal 1
 process requests 0
+signal 1
 process requests 0
+signal 1
 process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
-process requests 0
+signal 1
 deinit space.plamauer.test 0
