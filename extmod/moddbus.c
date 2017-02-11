@@ -35,6 +35,8 @@ mp_obj_t *fun_table = NULL;
 int tab_len = 0;
 static sd_bus_vtable start = SD_BUS_VTABLE_START(0);
 static sd_bus_vtable end = SD_BUS_VTABLE_END;
+sd_bus *bus = NULL;
+sd_bus_slot *slot = NULL;
 
 // find_fun ********************************************************************
 int find_fun(const char *member) {
@@ -267,20 +269,19 @@ STATIC mp_obj_t mod_dbus_register(mp_obj_t function, mp_obj_t inp, mp_obj_t outp
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_dbus_register_obj, mod_dbus_register);
 
-// dbus.run ********************************************************************
-STATIC mp_obj_t mod_dbus_run(mp_obj_t interface_name, mp_obj_t object_path) {
+// dbus.init *******************************************************************
+STATIC mp_obj_t mod_dbus_init(mp_obj_t interface_name, mp_obj_t object_path) {
     const char *name = mp_obj_str_get_str(interface_name);
     const char *path = mp_obj_str_get_str(object_path);
 
-    sd_bus_slot *slot = NULL;
-    sd_bus *bus = NULL;
+    //sd_bus_slot *slot = NULL;
+    //sd_bus *bus = NULL;
     int r;
 
     /* Connect to the user bus */
     r = sd_bus_open_user(&bus);
     if (r < 0) {
             fprintf(stderr, "Failed to connect to system bus: %s\n", strerror(-r));
-            goto finish;
     }
 
     /* Install the object */
@@ -292,44 +293,54 @@ STATIC mp_obj_t mod_dbus_run(mp_obj_t interface_name, mp_obj_t object_path) {
                                  NULL);
     if (r < 0) {
             fprintf(stderr, "Failed to issue method call: %s\n", strerror(-r));
-            goto finish;
     }
 
     /* Request a name */
     r = sd_bus_request_name(bus, name, 0);
     if (r < 0) {
             fprintf(stderr, "Failed to acquire service name: %s\n", strerror(-r));
-            goto finish;
     }
 
-    for (;;) {
-            /* Process requests */
-            r = sd_bus_process(bus, NULL);
-            if (r < 0) {
-                    fprintf(stderr, "Failed to process bus: %s\n", strerror(-r));
-                    goto finish;
-            }
-
-            /* Wait for the next request to process */
-            r = sd_bus_wait(bus, (uint64_t) -1);
-            if (r < 0) {
-                    fprintf(stderr, "Failed to wait on bus: %s\n", strerror(-r));
-                    goto finish;
-            }
-    }
-
-finish:
-    sd_bus_slot_unref(slot);
-    sd_bus_unref(bus);
     return MP_OBJ_NEW_SMALL_INT(r);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_dbus_run_obj, mod_dbus_run);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_dbus_int_obj, mod_dbus_init);
+
+// dbus.process ****************************************************************
+STATIC mp_obj_t mod_dbus_process(mp_obj_t timeout_ms) {
+    uint64_t timeout = mp_obj_get_int(timeout_ms) * 1000;
+    int r;
+
+    /* Process requests */
+    r = sd_bus_process(bus, NULL);
+    if (r < 0) {
+            fprintf(stderr, "Failed to process bus: %s\n", strerror(-r));
+    }
+
+    /* Wait for the next request to process */
+    r = sd_bus_wait(bus, timeout);
+    if (r < 0) {
+            fprintf(stderr, "Failed to wait on bus: %s\n", strerror(-r));
+    }
+
+    return MP_OBJ_NEW_SMALL_INT(r);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_dbus_process_obj, mod_dbus_process);
+
+// dbus.deinit *****************************************************************
+STATIC mp_obj_t mod_dbus_deinit() {
+    sd_bus_slot_unref(slot);
+    sd_bus_unref(bus);
+    return MP_OBJ_NEW_SMALL_INT(0);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_dbus_deinit_obj, mod_dbus_deinit);
 
 // dbus bindings ***************************************************************
 STATIC const mp_rom_map_elem_t mp_module_dbus_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_dbus) },
     { MP_ROM_QSTR(MP_QSTR_register), (mp_obj_t)&mod_dbus_register_obj },
-    { MP_ROM_QSTR(MP_QSTR_run), (mp_obj_t)&mod_dbus_run_obj },
+    { MP_ROM_QSTR(MP_QSTR_process), (mp_obj_t)&mod_dbus_process_obj },
+    { MP_ROM_QSTR(MP_QSTR_init), (mp_obj_t)&mod_dbus_int_obj },
+    { MP_ROM_QSTR(MP_QSTR_deinit), (mp_obj_t)&mod_dbus_deinit_obj },
 };
 
 STATIC MP_DEFINE_CONST_DICT(mp_module_dbus_globals, mp_module_dbus_globals_table);
