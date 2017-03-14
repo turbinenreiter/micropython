@@ -157,6 +157,7 @@
 #define MICROPY_ENABLE_EMERGENCY_EXCEPTION_BUF   (1)
 #define MICROPY_EMERGENCY_EXCEPTION_BUF_SIZE  (256)
 #define MICROPY_ASYNC_KBD_INTR      (1)
+#define MICROPY_PY_FUSIONC (1)
 
 extern const struct _mp_obj_module_t mp_module_machine;
 extern const struct _mp_obj_module_t mp_module_os;
@@ -167,6 +168,7 @@ extern const struct _mp_obj_module_t mp_module_termios;
 extern const struct _mp_obj_module_t mp_module_socket;
 extern const struct _mp_obj_module_t mp_module_ffi;
 extern const struct _mp_obj_module_t mp_module_jni;
+extern const struct _mp_obj_module_t mp_module_fusionc;
 
 #if MICROPY_PY_UOS_VFS
 #define MICROPY_PY_UOS_VFS_DEF { MP_ROM_QSTR(MP_QSTR_uos_vfs), MP_ROM_PTR(&mp_module_uos_vfs) },
@@ -204,6 +206,12 @@ extern const struct _mp_obj_module_t mp_module_jni;
 #define MICROPY_PY_USELECT_DEF
 #endif
 
+#if MICROPY_PY_FUSIONC
+#define MICROPY_PY_FUSIONC_DEF { MP_OBJ_NEW_QSTR(MP_QSTR_fusionc), (mp_obj_t)&mp_module_fusionc },
+#else
+#define MICROPY_PY_FUSIONC_DEF
+#endif
+
 #define MICROPY_PORT_BUILTIN_MODULES \
     MICROPY_PY_FFI_DEF \
     MICROPY_PY_JNI_DEF \
@@ -214,6 +222,7 @@ extern const struct _mp_obj_module_t mp_module_jni;
     MICROPY_PY_UOS_VFS_DEF \
     MICROPY_PY_USELECT_DEF \
     MICROPY_PY_TERMIOS_DEF \
+    MICROPY_PY_FUSIONC_DEF
 
 // type definitions for the specific machine
 
