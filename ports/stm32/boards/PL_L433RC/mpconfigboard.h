@@ -1,0 +1,53 @@
+#define MICROPY_HW_BOARD_NAME "PL_L433RC"
+#define MICROPY_HW_MCU_NAME "STM32L433RC"
+
+#define MICROPY_EMIT_THUMB (0)
+#define MICROPY_EMIT_INLINE_THUMB (0)
+#define MICROPY_PY_USOCKET (0)
+#define MICROPY_PY_NETWORK (0)
+#define MICROPY_PY_STM (0)
+#define MICROPY_PY_PYB_LEGACY (0)
+#define MICROPY_VFS_FAT (0)
+
+#define MICROPY_HW_HAS_SWITCH (0)
+#define MICROPY_HW_HAS_FLASH (0)
+#define MICROPY_HW_ENABLE_RTC (0)
+#define MICROPY_HW_ENABLE_ADC (0)
+#define MICROPY_HW_ENABLE_TIMER (0)
+#define MICROPY_HW_ENABLE_USB (0)
+#define MICROPY_HW_ENABLE_INTERNAL_FLASH_STORAGE (0)
+
+// UART config
+#define MICROPY_HW_UART2_TX (pin_B6)
+#define MICROPY_HW_UART2_RX (pin_B7)
+
+#define MICROPY_HW_UART_REPL PYB_UART_2
+#define MICROPY_HW_UART_REPL_BAUD 115200
+
+#define MICROPY_HW_FLASH_LATENCY FLASH_LATENCY_4
+
+// I2C busses
+#define MICROPY_HW_I2C1_SCL (pin_A9)
+#define MICROPY_HW_I2C1_SDA (pin_A10)
+
+// SPI busses
+#define MICROPY_HW_SPI1_NSS (pin_A2)
+#define MICROPY_HW_SPI1_SCK (pin_A5)
+#define MICROPY_HW_SPI1_MISO (pin_A6)
+#define MICROPY_HW_SPI1_MOSI (pin_A7)
+
+// USRSW is pulled low. Pressing the button makes the input go high.
+#define MICROPY_HW_USRSW_PIN (pin_C13)
+#define MICROPY_HW_USRSW_PULL (GPIO_NOPULL)
+#define MICROPY_HW_USRSW_EXTI_MODE (GPIO_MODE_IT_FALLING)
+#define MICROPY_HW_USRSW_PRESSED (0)
+
+// LEDs
+#define MICROPY_HW_LED1 (pin_C0)
+#define MICROPY_HW_LED2 (pin_C1)
+#define MICROPY_HW_LED3 (pin_C2)
+#define MICROPY_HW_LED_ON(pin) (mp_hal_pin_high(pin))
+#define MICROPY_HW_LED_OFF(pin) (mp_hal_pin_low(pin))
+
+// USB config
+#define MICROPY_HW_USB_FS (0)
